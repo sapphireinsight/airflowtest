@@ -1,0 +1,50 @@
+images:
+  airflow:
+    repository: zhaoqi0406/airflow
+    tag: 2.7.1.4
+    pullPolicy: IfNotPresent
+
+securityContext:
+  fsGroup: 1
+
+webserver:
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 4096Mi
+    requests:
+      cpu: 2000m
+      memory: 4096Mi
+
+workers:
+  replicas: 4
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 16Gi
+    requests:
+      cpu: 2000m
+      memory: 16Gi
+
+dags:
+  persistence:
+    enabled: false
+  gitSync:
+    enabled: true
+    repo: https://github.com/sapphireinsight/airflowtest.git
+    branch: main
+    subPath: "dags"
+
+config:
+  webserver:
+    expose_config: 'True'
+
+secret:
+  - envName: "AIRFLOW_CONN_MYSQL_297_MTI_476"
+    secretName: "my-airflow-connections"
+    secretKey: "AIRFLOW_CONN_MYSQL_297_MTI_476_URL"
+
+#extraSecrets:
+#  my-airflow-connections:
+#    stringData: |
+#      AIRFLOW_CONN_MYSQL_297_MTI_476_URL: '12345'
