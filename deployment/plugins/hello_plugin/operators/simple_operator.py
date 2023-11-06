@@ -53,166 +53,134 @@ FILE_OPTIONS_MAP = {
 
 
 class simpleOperator(BaseOperator):
-  """
-  Saves data from a specific SQL query into a file in S3.
+  def __init__(
+      self,
+      snowflake_conn_id: str = "snowflake_default",
+      warehouse: str | None = None,
+      database: str | None = None,
+      role: str | None = None,
+      schema: str | None = None,
+      sql_query: str,
+      sql_conn_id: str,
+      sql_database: str,
+      file_format: Literal["csv", "json", "parquet"] = "csv",
+      pd_kwargs: dict | None = None,
+      *args,
+      **kwargs,
+  ) -> None:
+    super().__init__(*args, **kwargs)
+    self.snowflake_conn_id = snowflake_conn_id,
+    self.warehouse = warehouse,
+    self.database = database,
+    self.role = role,
+    self.schema = schema,
+    self.sql_query = sql_query
+    self.sql_conn_id = sql_conn_id
+    self.sql_database = sql_database
+    self.pd_kwargs = pd_kwargs or {}
 
-  .. seealso::
-      For more information on how to use this operator, take a look at the guide:
-      :ref:`howto/operator:simpleOperator`
-
-  :param query: the sql query to be executed. If you want to execute a file, place the absolute path of it,
-      ending with .sql extension. (templated)
-  :param s3_bucket: bucket where the data will be stored. (templated)
-  :param s3_key: desired key for the file. It includes the name of the file. (templated)
-  :param replace: whether or not to replace the file in S3 if it previously existed
-  :param sql_conn_id: reference to a specific database.
-  :param sql_hook_params: Extra config params to be passed to the underlying hook.
-      Should match the desired hook constructor params.
-  :param parameters: (optional) the parameters to render the SQL query with.
-  :param aws_conn_id: reference to a specific S3 connection
-  :param verify: Whether or not to verify SSL certificates for S3 connection.
-      By default SSL certificates are verified.
-      You can provide the following values:
-
-      - ``False``: do not validate SSL certificates. SSL will still be used
-              (unless use_ssl is False), but SSL certificates will not be verified.
-      - ``path/to/cert/bundle.pem``: A filename of the CA cert bundle to uses.
-              You can specify this argument if you want to use a different
-              CA cert bundle than the one used by botocore.
-  :param file_format: the destination file format, only string 'csv', 'json' or 'parquet' is accepted.
-  :param pd_kwargs: arguments to include in DataFrame ``.to_parquet()``, ``.to_json()`` or ``.to_csv()``.
-  :param groupby_kwargs: argument to include in DataFrame ``groupby()``.
-  """
-
-
-def __init__(
-    self,
-    snowflake_conn_id: str = "snowflake_default",
-    warehouse: str | None = None,
-    database: str | None = None,
-    role: str | None = None,
-    schema: str | None = None,
-    sql_query: str,
-    sql_conn_id: str,
-    sql_database: str,
-    file_format: Literal["csv", "json", "parquet"] = "csv",
-    pd_kwargs: dict | None = None,
-    *args,
-    **kwargs,
-) -> None:
-  super().__init__(*args, **kwargs)
-  self.snowflake_conn_id = snowflake_conn_id,
-  self.warehouse = warehouse,
-  self.database = database,
-  self.role = role,
-  self.schema = schema,
-  self.sql_query = sql_query
-  self.sql_conn_id = sql_conn_id
-  self.sql_database = sql_database
-  self.pd_kwargs = pd_kwargs or {}
-
-  if "path_or_buf" in self.pd_kwargs:
-    raise AirflowException(
-      "The argument path_or_buf is not allowed, please remove it")
-
-  try:
-    self.file_format = FILE_FORMAT[file_format.upper()]
-  except KeyError:
-    raise AirflowException(
-      f"The argument file_format doesn't support {file_format} value.")
+    if "path_or_buf" in self.pd_kwargs:
+      raise AirflowException(
+        "The argument path_or_buf is not allowed, please remove it")
+  
+    try:
+      self.file_format = FILE_FORMAT[file_format.upper()]
+    except KeyError:
+      raise AirflowException(
+        f"The argument file_format doesn't support {file_format} value.")
 
 
-@staticmethod
-def _fix_dtypes(df: pd.DataFrame, file_format: FILE_FORMAT) -> None:
-  """
-  Mutate DataFrame to set dtypes for float columns containing NaN values.
+  @staticmethod
+  def _fix_dtypes(df: pd.DataFrame, file_format: FILE_FORMAT) -> None:
+    """
+    Mutate DataFrame to set dtypes for float columns containing NaN values.
+  
+    Set dtype of object to str to allow for downstream transformations.
+    """
+    try:
+      import numpy as np
+      import pandas as pd
+    except ImportError as e:
+      from airflow.exceptions import AirflowOptionalProviderFeatureException
+  
+      raise AirflowOptionalProviderFeatureException(e)
+  
+    for col in df:
+      if df[col].dtype.name == "object" and file_format == "parquet":
+        # if the type wasn't identified or converted, change it to a string so if can still be
+        # processed.
+        df[col] = df[col].astype(str)
+  
+      if "float" in df[col].dtype.name and df[col].hasnans:
+        # inspect values to determine if dtype of non-null values is int or float
+        notna_series = df[col].dropna().values
+        if np.equal(notna_series, notna_series.astype(int)).all():
+          # set to dtype that retains integers and supports NaNs
+          # The type ignore can be removed here if https://github.com/numpy/numpy/pull/23690
+          # is merged and released as currently NumPy does not consider None as valid for x/y.
+          df[col] = np.where(df[col].isnull(), None,
+                             df[col])  # type: ignore[call-overload]
+          df[col] = df[col].astype(pd.Int64Dtype())
+        elif np.isclose(notna_series, notna_series.astype(int)).all():
+          # set to float dtype that retains floats and supports NaNs
+          # The type ignore can be removed here if https://github.com/numpy/numpy/pull/23690
+          # is merged and released
+          df[col] = np.where(df[col].isnull(), None,
+                             df[col])  # type: ignore[call-overload]
+          df[col] = df[col].astype(pd.Float64Dtype())
 
-  Set dtype of object to str to allow for downstream transformations.
-  """
-  try:
-    import numpy as np
-    import pandas as pd
-  except ImportError as e:
-    from airflow.exceptions import AirflowOptionalProviderFeatureException
-
-    raise AirflowOptionalProviderFeatureException(e)
-
-  for col in df:
-    if df[col].dtype.name == "object" and file_format == "parquet":
-      # if the type wasn't identified or converted, change it to a string so if can still be
-      # processed.
-      df[col] = df[col].astype(str)
-
-    if "float" in df[col].dtype.name and df[col].hasnans:
-      # inspect values to determine if dtype of non-null values is int or float
-      notna_series = df[col].dropna().values
-      if np.equal(notna_series, notna_series.astype(int)).all():
-        # set to dtype that retains integers and supports NaNs
-        # The type ignore can be removed here if https://github.com/numpy/numpy/pull/23690
-        # is merged and released as currently NumPy does not consider None as valid for x/y.
-        df[col] = np.where(df[col].isnull(), None,
-                           df[col])  # type: ignore[call-overload]
-        df[col] = df[col].astype(pd.Int64Dtype())
-      elif np.isclose(notna_series, notna_series.astype(int)).all():
-        # set to float dtype that retains floats and supports NaNs
-        # The type ignore can be removed here if https://github.com/numpy/numpy/pull/23690
-        # is merged and released
-        df[col] = np.where(df[col].isnull(), None,
-                           df[col])  # type: ignore[call-overload]
-        df[col] = df[col].astype(pd.Float64Dtype())
-
-def execute(self, context: Context) -> None:
-  hook = MySqlHook(mysql_conn_id=sql_conn_id, schema=sql_database)
-  data_df = hook.get_pandas_df(sql=query)
-  self.log.info("Data from SQL obtained")
-
-  self._fix_dtypes(data_df, self.file_format)
-  file_options = FILE_OPTIONS_MAP[self.file_format]
-
-  for group_name, df in self._partition_dataframe(df=data_df):
-    with NamedTemporaryFile(mode=file_options.mode,
-                            suffix=file_options.suffix) as tmp_file:
-      self.log.info("Writing data to temp file")
-      getattr(df, file_options.function)(tmp_file.name, **self.pd_kwargs)
-
-      self.log.info("Uploading data to Snnowflake")
-      snowflake_hook = _get_snowflake_hook()
-      snowflake_conn = snowflake_hook.get_conn()
-      snowflake_conn.cursor().execute(
-          "CREATE OR REPLACE TABLE "
-          "activity_type_temp_2(id integer, name string)")
-      snowflake_conn.cursor().execute(
-        "PUT file:///tmp/data/file* @%activity_type_temp_2")
-      snowflake_conn.cursor().execute("COPY INTO activity_type_temp_2")
-
-      self.log.info("Reading data from Snnowflake")
-      for (id, name) in snowflake_conn.cursor().execute(
-          "SELECT id, name FROM activity_type_temp_2"):
-        print('id:{0}, name: {1}'.format(id, name))
-      self.log.info("close Snnowflake connection")
-      snowflake_conn.close()
-
-
-def _partition_dataframe(self, df: pd.DataFrame) -> Iterable[
-  tuple[str, pd.DataFrame]]:
-  """Partition dataframe using pandas groupby() method."""
-  yield "", df
-  # if not self.groupby_kwargs:
-  #   yield "", df
-  # else:
-  #   grouped_df = df.groupby(**self.groupby_kwargs)
-  #   for group_label in grouped_df.groups:
-  #     yield group_label, grouped_df.get_group(group_label).reset_index(drop=True)
+  def execute(self, context: Context) -> None:
+    hook = MySqlHook(mysql_conn_id=sql_conn_id, schema=sql_database)
+    data_df = hook.get_pandas_df(sql=query)
+    self.log.info("Data from SQL obtained")
+  
+    self._fix_dtypes(data_df, self.file_format)
+    file_options = FILE_OPTIONS_MAP[self.file_format]
+  
+    for group_name, df in self._partition_dataframe(df=data_df):
+      with NamedTemporaryFile(mode=file_options.mode,
+                              suffix=file_options.suffix) as tmp_file:
+        self.log.info("Writing data to temp file")
+        getattr(df, file_options.function)(tmp_file.name, **self.pd_kwargs)
+  
+        self.log.info("Uploading data to Snnowflake")
+        snowflake_hook = _get_snowflake_hook()
+        snowflake_conn = snowflake_hook.get_conn()
+        snowflake_conn.cursor().execute(
+            "CREATE OR REPLACE TABLE "
+            "activity_type_temp_2(id integer, name string)")
+        snowflake_conn.cursor().execute(
+          "PUT file:///tmp/data/file* @%activity_type_temp_2")
+        snowflake_conn.cursor().execute("COPY INTO activity_type_temp_2")
+  
+        self.log.info("Reading data from Snnowflake")
+        for (id, name) in snowflake_conn.cursor().execute(
+            "SELECT id, name FROM activity_type_temp_2"):
+          print('id:{0}, name: {1}'.format(id, name))
+        self.log.info("close Snnowflake connection")
+        snowflake_conn.close()
 
 
-def _get_snowflake_hook(self) -> SnowflakeSqlApiHook:
-  self.log.debug("Get connection for %s", self.snowflake_conn_id)
+  def _partition_dataframe(self, df: pd.DataFrame) -> Iterable[
+    tuple[str, pd.DataFrame]]:
+    """Partition dataframe using pandas groupby() method."""
+    yield "", df
+    # if not self.groupby_kwargs:
+    #   yield "", df
+    # else:
+    #   grouped_df = df.groupby(**self.groupby_kwargs)
+    #   for group_label in grouped_df.groups:
+    #     yield group_label, grouped_df.get_group(group_label).reset_index(drop=True)
 
-  hook = SnowflakeSqlApiHook(
-      snowflake_conn_id=self.snowflake_conn_id,
-      database=self.database,
-      warehouse=self.warehouse,
-      schema=self.schema,
-      role=self.role
-  )
-  return hook
+
+  def _get_snowflake_hook(self) -> SnowflakeSqlApiHook:
+    self.log.debug("Get connection for %s", self.snowflake_conn_id)
+  
+    hook = SnowflakeSqlApiHook(
+        snowflake_conn_id=self.snowflake_conn_id,
+        database=self.database,
+        warehouse=self.warehouse,
+        schema=self.schema,
+        role=self.role
+    )
+    return hook
