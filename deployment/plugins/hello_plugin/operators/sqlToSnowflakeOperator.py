@@ -102,7 +102,6 @@ class SqlToSnowflakeOperator(BaseOperator):
 
 def __init__(
     self,
-    *,
     snowflake_conn_id: str = "snowflake_default",
     warehouse: str | None = None,
     database: str | None = None,
