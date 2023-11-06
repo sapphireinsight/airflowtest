@@ -144,13 +144,13 @@ class simpleOperator(BaseOperator):
         getattr(df, file_options.function)(tmp_file.name, **self.pd_kwargs)
   
         self.log.info("Uploading data to Snnowflake")
-        snowflake_hook = _get_snowflake_hook()
+        snowflake_hook = self._get_snowflake_hook()
         snowflake_conn = snowflake_hook.get_conn()
         snowflake_conn.cursor().execute(
             "CREATE OR REPLACE TABLE "
             "activity_type_temp_2(id integer, name string)")
         snowflake_conn.cursor().execute(
-          "PUT file:///tmp/data/file* @%activity_type_temp_2")
+          "PUT {0} @%activity_type_temp_2".format(tmp_file.name))
         snowflake_conn.cursor().execute("COPY INTO activity_type_temp_2")
   
         self.log.info("Reading data from Snnowflake")
