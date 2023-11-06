@@ -133,6 +133,7 @@ class simpleOperator(BaseOperator):
     hook = MySqlHook(mysql_conn_id=self.sql_conn_id, schema=self.sql_database)
     data_df = hook.get_pandas_df(sql=self.sql_query)
     self.log.info("Data from SQL obtained")
+    self.log.info(data_df.to_string())
   
     self._fix_dtypes(data_df, self.file_format)
     file_options = FILE_OPTIONS_MAP[self.file_format]
@@ -145,6 +146,8 @@ class simpleOperator(BaseOperator):
   
         self.log.info("Uploading data to Snnowflake")
         snowflake_hook = self._get_snowflake_hook()
+        self.log.info("print snowflake con params")
+        self.log.info(snowflake_hook._get_conn_params())
         snowflake_conn = snowflake_hook.get_conn()
         snowflake_conn.cursor().execute(
             "CREATE OR REPLACE TABLE "
@@ -174,7 +177,7 @@ class simpleOperator(BaseOperator):
 
 
   def _get_snowflake_hook(self) -> SnowflakeSqlApiHook:
-    self.log.debug("Get connection for %s", self.snowflake_conn_id)
+    self.log.info("Get connection for %s", self.snowflake_conn_id)
   
     hook = SnowflakeSqlApiHook(
         snowflake_conn_id=self.snowflake_conn_id,
