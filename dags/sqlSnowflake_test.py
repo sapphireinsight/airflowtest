@@ -1,7 +1,7 @@
 from airflow import DAG
 from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
-from hello_plugin.operators.sqlToSnowflakeOperator import SqlToSnowflakeOperator
+from hello_plugin.operators.simple_operator import simpleOperator
 
 SNOWFLAKE_CONN_ID = 'snowflake-test-conn'
 SNOWFLAKE_SCHEMA = 'INSIGHTS'
@@ -13,6 +13,7 @@ SNOWFLAKE_ROLE = 'B2B_INSIGHTS_111BBB999_WRITE_ROLE'
 
 MYSQL_CONNECTION_ID = 'mysql_297_mti_476'
 MYSQL_QUERY = 'select id, name from activity_type;'
+MYSQL_DATABASE = 'ankurint1Betacust'
 
 
 default_args = {
@@ -26,7 +27,7 @@ dag = DAG(
     tags=['example'],
 )
 
-sql_snowflake_op_with_params = SqlToSnowflakeOperator(
+sql_snowflake_op_with_params = simpleOperator(
     task_id='sql_snowflake_op_with_params',
     dag=dag,
     snowflake_conn_id=SNOWFLAKE_CONN_ID,
@@ -35,8 +36,8 @@ sql_snowflake_op_with_params = SqlToSnowflakeOperator(
     schema=SNOWFLAKE_SCHEMA,
     role=SNOWFLAKE_ROLE,
     sql_conn_id=MYSQL_CONNECTION_ID,
-    query=MYSQL_QUERY,
-    # parameters={"database": "ankurint1Betacust"},
+    sql_query=MYSQL_QUERY,
+    sql_database=MYSQL_DATABASE,
 )
 
 sql_snowflake_op_with_params
