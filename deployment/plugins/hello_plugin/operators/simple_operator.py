@@ -178,9 +178,5 @@ class simpleOperator(BaseOperator):
   
     hook = SnowflakeSqlApiHook(
         snowflake_conn_id=self.snowflake_conn_id,
-        database=self.database,
-        warehouse=self.warehouse,
-        schema=self.schema,
-        role=self.role
     )
     return hook
