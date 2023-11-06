@@ -190,7 +190,7 @@ def _fix_dtypes(df: pd.DataFrame, file_format: FILE_FORMAT) -> None:
                            df[col])  # type: ignore[call-overload]
         df[col] = df[col].astype(pd.Float64Dtype())
 
-    def execute(self, context: Context) -> None:
+def execute(self, context: Context) -> None:
   sql_hook = self._get_hook()
   # s3_conn = S3Hook(aws_conn_id=self.aws_conn_id, verify=self.verify)
   # snowflake_conn = SnowflakeSqlApiHook(snowflake_conn_id=self.snowflake_conn_id,  sql=SQL_INSERT_STATEMENT, database=SNOWFLAKE_DATABASE, warehouse=SNOWFLAKE_WAREHOUSE, schema=SNOWFLAKE_SCHEMA,role=SNOWFLAKE_ROLE)
@@ -264,43 +264,3 @@ def _get_snowflake_hook(self) -> SnowflakeSqlApiHook:
       role=self.role
   )
   return hook
-
-# from snowflake.snowpark.session import Session, FileOperation
-# import os
-#
-# file="test.csv"
-# csv_file="\\\\Sharedpath\\share"
-# archive_file="\\\\Sharedpath\\archive"
-#
-# # Create Session object
-# def create_session_object():
-#   connection_parameters = {
-#     "account": "XXX",
-#     "user": "XXXX",
-#     "password": "XXX",
-#     "role": "ACCOUNTADMIN",
-#     "warehouse": "COMPUTE_WH",
-#     "database": "EXERCISE_DB",
-#     "schema": "EXCERCISE_SCHEMA"
-#   }
-#   session = Session.builder.configs(connection_parameters).create()
-#   return session
-#
-# def load_data(session):
-#   # Create internal stage if it does not exists
-#   session.sql("create or replace stage demo ").collect()
-#
-#   #Upload file to stage
-#   FileOperation(session).put(os.path.join(csv_file,file), '@demo/test.csv')
-#
-#   #create or replace snowflake table
-#   session.sql("create or replace table demo_csv(ID INT, first_name varchar)").collect()
-#
-#   #load table from stage
-#   session.sql("copy into demo_csv from @demo file_format= (type = csv field_delimiter=',' skip_header=1)").collect()
-#
-#   #drop stage
-#   session.sql("drop stage demo").collect()
-#
-#   #Move/Archive/rename file to other folder
-#   os.rename(os.path.join(csv_file,file),os.path.join(archive_file,file))
