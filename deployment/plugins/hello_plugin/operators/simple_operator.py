@@ -55,6 +55,7 @@ FILE_OPTIONS_MAP = {
 class simpleOperator(BaseOperator):
   def __init__(
       self,
+      *,
       snowflake_conn_id: str = "snowflake_default",
       warehouse: str | None = None,
       database: str | None = None,
@@ -65,10 +66,8 @@ class simpleOperator(BaseOperator):
       sql_database: str | None = None,
       file_format: Literal["csv", "json", "parquet"] = "csv",
       pd_kwargs: dict | None = None,
-      *args,
       **kwargs,
-  ):
-    super().__init__(*args, **kwargs)
+  ) -> None:
     self.snowflake_conn_id = snowflake_conn_id,
     self.warehouse = warehouse,
     self.database = database,
@@ -88,7 +87,8 @@ class simpleOperator(BaseOperator):
     except KeyError:
       raise AirflowException(
         f"The argument file_format doesn't support {file_format} value.")
-
+    
+    super().__init__(**kwargs)
 
   @staticmethod
   def _fix_dtypes(df: pd.DataFrame, file_format: FILE_FORMAT) -> None:
