@@ -28,9 +28,8 @@ from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator
 # from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-from airflow.providers.snowflake.hooks.snowflake_sql_api import SnowflakeSqlApiHook
-
-
+from airflow.providers.snowflake.hooks.snowflake_sql_api import \
+  SnowflakeSqlApiHook
 
 if TYPE_CHECKING:
   import pandas as pd
@@ -39,24 +38,24 @@ if TYPE_CHECKING:
   from airflow.utils.context import Context
 
 
-[docs]class FILE_FORMAT(enum.Enum):
+class FILE_FORMAT(enum.Enum):
   """Possible file formats."""
 
-[docs]    CSV = enum.auto()
-[docs]    JSON = enum.auto()
-[docs]    PARQUET = enum.auto()
+  CSV = enum.auto()
+  JSON = enum.auto()
+  PARQUET = enum.auto()
 
 
-[docs]FileOptions = namedtuple("FileOptions", ["mode", "suffix", "function"])
+FileOptions = namedtuple("FileOptions", ["mode", "suffix", "function"])
 
-[docs]FILE_OPTIONS_MAP = {
+FILE_OPTIONS_MAP = {
   FILE_FORMAT.CSV: FileOptions("r+", ".csv", "to_csv"),
   FILE_FORMAT.JSON: FileOptions("r+", ".json", "to_json"),
   FILE_FORMAT.PARQUET: FileOptions("rb+", ".parquet", "to_parquet"),
 }
 
 
-[docs]class SqlToSnowflakeOperator(BaseOperator):
+class SqlToSnowflakeOperator(BaseOperator):
   """
   Saves data from a specific SQL query into a file in S3.
 
@@ -88,17 +87,18 @@ if TYPE_CHECKING:
   :param groupby_kwargs: argument to include in DataFrame ``groupby()``.
   """
 
-[docs]    template_fields: Sequence[str] = (
-  "s3_bucket",
-  "s3_key",
-  "query",
-  "sql_conn_id",
-)
-[docs]    template_ext: Sequence[str] = (".sql",)
-[docs]    template_fields_renderers = {
-  "query": "sql",
-  "pd_kwargs": "json",
-}
+  template_fields: Sequence[str] = (
+    "s3_bucket",
+    "s3_key",
+    "query",
+    "sql_conn_id",
+  )
+  template_ext: Sequence[str] = (".sql",)
+  template_fields_renderers = {
+    "query": "sql",
+    "pd_kwargs": "json",
+  }
+
 
 def __init__(
     self,
@@ -123,7 +123,7 @@ def __init__(
     **kwargs,
 ) -> None:
   super().__init__(**kwargs)
-  self.snowflake_conn_id =snowflake_conn_id,
+  self.snowflake_conn_id = snowflake_conn_id,
   self.warehouse = warehouse,
   self.database = database,
   self.role = role,
@@ -141,12 +141,15 @@ def __init__(
   self.sql_hook_params = sql_hook_params
 
   if "path_or_buf" in self.pd_kwargs:
-    raise AirflowException("The argument path_or_buf is not allowed, please remove it")
+    raise AirflowException(
+      "The argument path_or_buf is not allowed, please remove it")
 
   try:
     self.file_format = FILE_FORMAT[file_format.upper()]
   except KeyError:
-    raise AirflowException(f"The argument file_format doesn't support {file_format} value.")
+    raise AirflowException(
+      f"The argument file_format doesn't support {file_format} value.")
+
 
 @staticmethod
 def _fix_dtypes(df: pd.DataFrame, file_format: FILE_FORMAT) -> None:
@@ -176,16 +179,18 @@ def _fix_dtypes(df: pd.DataFrame, file_format: FILE_FORMAT) -> None:
         # set to dtype that retains integers and supports NaNs
         # The type ignore can be removed here if https://github.com/numpy/numpy/pull/23690
         # is merged and released as currently NumPy does not consider None as valid for x/y.
-        df[col] = np.where(df[col].isnull(), None, df[col])  # type: ignore[call-overload]
+        df[col] = np.where(df[col].isnull(), None,
+                           df[col])  # type: ignore[call-overload]
         df[col] = df[col].astype(pd.Int64Dtype())
       elif np.isclose(notna_series, notna_series.astype(int)).all():
         # set to float dtype that retains floats and supports NaNs
         # The type ignore can be removed here if https://github.com/numpy/numpy/pull/23690
         # is merged and released
-        df[col] = np.where(df[col].isnull(), None, df[col])  # type: ignore[call-overload]
+        df[col] = np.where(df[col].isnull(), None,
+                           df[col])  # type: ignore[call-overload]
         df[col] = df[col].astype(pd.Float64Dtype())
 
-[docs]    def execute(self, context: Context) -> None:
+    def execute(self, context: Context) -> None:
   sql_hook = self._get_hook()
   # s3_conn = S3Hook(aws_conn_id=self.aws_conn_id, verify=self.verify)
   # snowflake_conn = SnowflakeSqlApiHook(snowflake_conn_id=self.snowflake_conn_id,  sql=SQL_INSERT_STATEMENT, database=SNOWFLAKE_DATABASE, warehouse=SNOWFLAKE_WAREHOUSE, schema=SNOWFLAKE_SCHEMA,role=SNOWFLAKE_ROLE)
@@ -196,7 +201,8 @@ def _fix_dtypes(df: pd.DataFrame, file_format: FILE_FORMAT) -> None:
   file_options = FILE_OPTIONS_MAP[self.file_format]
 
   for group_name, df in self._partition_dataframe(df=data_df):
-    with NamedTemporaryFile(mode=file_options.mode, suffix=file_options.suffix) as tmp_file:
+    with NamedTemporaryFile(mode=file_options.mode,
+                            suffix=file_options.suffix) as tmp_file:
       self.log.info("Writing data to temp file")
       getattr(df, file_options.function)(tmp_file.name, **self.pd_kwargs)
 
@@ -212,17 +218,20 @@ def _fix_dtypes(df: pd.DataFrame, file_format: FILE_FORMAT) -> None:
       snowflake_conn.cursor().execute(
           "CREATE OR REPLACE TABLE "
           "activity_type_temp_2(id integer, name string)")
-      snowflake_conn.cursor().execute("PUT file:///tmp/data/file* @%activity_type_temp_2")
+      snowflake_conn.cursor().execute(
+        "PUT file:///tmp/data/file* @%activity_type_temp_2")
       snowflake_conn.cursor().execute("COPY INTO activity_type_temp_2")
 
       self.log.info("Reading data from Snnowflake")
-      for (id, name) in snowflake_conn.cursor().execute("SELECT id, name FROM activity_type_temp_2"):
+      for (id, name) in snowflake_conn.cursor().execute(
+          "SELECT id, name FROM activity_type_temp_2"):
         print('id:{0}, name: {1}'.format(id, name))
       self.log.info("close Snnowflake connection")
       snowflake_conn.close()
 
 
-def _partition_dataframe(self, df: pd.DataFrame) -> Iterable[tuple[str, pd.DataFrame]]:
+def _partition_dataframe(self, df: pd.DataFrame) -> Iterable[
+  tuple[str, pd.DataFrame]]:
   """Partition dataframe using pandas groupby() method."""
   yield "", df
   # if not self.groupby_kwargs:
@@ -231,6 +240,7 @@ def _partition_dataframe(self, df: pd.DataFrame) -> Iterable[tuple[str, pd.DataF
   #   grouped_df = df.groupby(**self.groupby_kwargs)
   #   for group_label in grouped_df.groups:
   #     yield group_label, grouped_df.get_group(group_label).reset_index(drop=True)
+
 
 def _get_hook(self) -> DbApiHook:
   self.log.debug("Get connection for %s", self.sql_conn_id)
@@ -254,8 +264,6 @@ def _get_snowflake_hook(self) -> SnowflakeSqlApiHook:
       role=self.role
   )
   return hook
-
-
 
 # from snowflake.snowpark.session import Session, FileOperation
 # import os
