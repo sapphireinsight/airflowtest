@@ -119,9 +119,10 @@ def __init__(
     file_format: Literal["csv", "json", "parquet"] = "csv",
     pd_kwargs: dict | None = None,
     groupby_kwargs: dict | None = None,
+    *args,
     **kwargs,
 ) -> None:
-  super().__init__(**kwargs)
+  super().__init__(*args, **kwargs)
   self.snowflake_conn_id = snowflake_conn_id,
   self.warehouse = warehouse,
   self.database = database,
