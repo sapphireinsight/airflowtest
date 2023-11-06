@@ -130,8 +130,8 @@ class simpleOperator(BaseOperator):
           df[col] = df[col].astype(pd.Float64Dtype())
 
   def execute(self, context: Context) -> None:
-    hook = MySqlHook(mysql_conn_id=sql_conn_id, schema=sql_database)
-    data_df = hook.get_pandas_df(sql=query)
+    hook = MySqlHook(mysql_conn_id=self.sql_conn_id, schema=self.sql_database)
+    data_df = hook.get_pandas_df(sql=self.sql_query)
     self.log.info("Data from SQL obtained")
   
     self._fix_dtypes(data_df, self.file_format)
