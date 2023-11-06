@@ -56,13 +56,13 @@ if TYPE_CHECKING:
 }
 
 
-[docs]class SqlToS3Operator(BaseOperator):
+[docs]class SqlToSnowflakeOperator(BaseOperator):
   """
   Saves data from a specific SQL query into a file in S3.
 
   .. seealso::
       For more information on how to use this operator, take a look at the guide:
-      :ref:`howto/operator:SqlToS3Operator`
+      :ref:`howto/operator:SqlToSnowflakeOperator`
 
   :param query: the sql query to be executed. If you want to execute a file, place the absolute path of it,
       ending with .sql extension. (templated)
