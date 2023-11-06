@@ -36,7 +36,7 @@ sql_snowflake_op_with_params = SqlToSnowflakeOperator(
     role=SNOWFLAKE_ROLE,
     sql_conn_id=MYSQL_CONNECTION_ID,
     query=MYSQL_QUERY,
-    parameters={"database": "ankurint1Betacust"},
+    # parameters={"database": "ankurint1Betacust"},
 )
 
 sql_snowflake_op_with_params
