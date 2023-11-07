@@ -29,8 +29,6 @@ from airflow.models import BaseOperator
 from airflow.providers.snowflake.hooks.snowflake_sql_api import SnowflakeSqlApiHook
 from airflow.providers.mysql.hooks.mysql import MySqlHook
 
-from snowflake.snowpark.session import Session, FileOperation
-
 if TYPE_CHECKING:
   import pandas as pd
 
@@ -147,25 +145,25 @@ class simpleOperator(BaseOperator):
         getattr(df, file_options.function)(tmp_file.name, **self.pd_kwargs)
   
         self.log.info("Uploading data to Snnowflake")
-        self.load_data(tmp_file.name)
+        # self.load_data(tmp_file.name)
         
-        # snowflake_hook = self._get_snowflake_hook()
-        # self.log.info("print snowflake con params")
-        # self.log.info(snowflake_hook._get_conn_params())
-        # snowflake_conn = snowflake_hook.get_conn()
-        # snowflake_conn.cursor().execute(
-        #     "CREATE OR REPLACE TABLE "
-        #     "activity_type_temp_2(id integer, name string)")
-        # snowflake_conn.cursor().execute(
-        #   "PUT {0} @%activity_type_temp_2".format(tmp_file.name))
-        # snowflake_conn.cursor().execute("COPY INTO activity_type_temp_2")
-        # 
-        # self.log.info("Reading data from Snnowflake")
-        # for (id, name) in snowflake_conn.cursor().execute(
-        #     "SELECT id, name FROM activity_type_temp_2"):
-        #   print('id:{0}, name: {1}'.format(id, name))
-        # self.log.info("close Snnowflake connection")
-        # snowflake_conn.close()
+        snowflake_hook = self._get_snowflake_hook()
+        self.log.info("print snowflake con params")
+        self.log.info(snowflake_hook._get_conn_params())
+        snowflake_conn = snowflake_hook.get_conn()
+        snowflake_conn.cursor().execute(
+            "CREATE OR REPLACE TABLE "
+            "activity_type_temp_2(id integer, name string)")
+        snowflake_conn.cursor().execute(
+          "PUT {0} @%activity_type_temp_2".format(tmp_file.name))
+        snowflake_conn.cursor().execute("COPY INTO activity_type_temp_2")
+
+        self.log.info("Reading data from Snnowflake")
+        for (id, name) in snowflake_conn.cursor().execute(
+            "SELECT id, name FROM activity_type_temp_2"):
+          print('id:{0}, name: {1}'.format(id, name))
+        self.log.info("close Snnowflake connection")
+        snowflake_conn.close()
 
 
   def _partition_dataframe(self, df: pd.DataFrame) -> Iterable[
@@ -189,41 +187,43 @@ class simpleOperator(BaseOperator):
     return hook
 
 
-  # file="test.csv"
-  # csv_file="\\\\Sharedpath\\share"
-  # archive_file="\\\\Sharedpath\\archive"
-
-  # Create Session object
-  def create_session_object(self):
-    connection_parameters = {
-      "account": "itqgdcp-targetaccount",
-      "user": "BOBA",
-      "password": "Marketo17!",
-      # "private_key": "",
-      "role": "ACCOUNTADMIN",
-      "warehouse": "my_wh",
-      "database": "PET_STORE",
-      "schema": "CATSCHEMA"
-    }
-    session = Session.builder.configs(connection_parameters).create()
-    return session
-
-  def load_data(self, filepathh):
-    session = self.create_session_object()
-    # Create internal stage if it does not exists
-    session.sql("create or replace stage demo ").collect()
-
-    #Upload file to stage
-    FileOperation(session).put(filepathh, '@demo/test.csv')
-
-    #create or replace snowflake table
-    session.sql("create or replace table activity_type_temp_3(id integer, name string)").collect()
-
-    #load table from stage
-    session.sql("copy into activity_type_temp_3 from @demo file_format= (type = csv field_delimiter=',' skip_header=1)").collect()
-
-    #drop stage
-    session.sql("drop stage demo").collect()
-
-    #Move/Archive/rename file to other folder
-    # os.rename(os.path.join(csv_file,file),os.path.join(archive_file,file))
+# from snowflake.snowpark.session import Session, FileOperation
+#
+#   # file="test.csv"
+#   # csv_file="\\\\Sharedpath\\share"
+#   # archive_file="\\\\Sharedpath\\archive"
+#
+#   # Create Session object
+#   def create_session_object(self):
+#     connection_parameters = {
+#       "account": "itqgdcp-targetaccount",
+#       "user": "BOBA",
+#       "password": "",
+#       # "private_key": "",
+#       "role": "ACCOUNTADMIN",
+#       "warehouse": "my_wh",
+#       "database": "PET_STORE",
+#       "schema": "CATSCHEMA"
+#     }
+#     session = Session.builder.configs(connection_parameters).create()
+#     return session
+#
+#   def load_data(self, filepathh):
+#     session = self.create_session_object()
+#     # Create internal stage if it does not exists
+#     session.sql("create or replace stage demo ").collect()
+#
+#     #Upload file to stage
+#     FileOperation(session).put(filepathh, '@demo/test.csv')
+#
+#     #create or replace snowflake table
+#     session.sql("create or replace table activity_type_temp_3(id integer, name string)").collect()
+#
+#     #load table from stage
+#     session.sql("copy into activity_type_temp_3 from @demo file_format= (type = csv field_delimiter=',' skip_header=1)").collect()
+#
+#     #drop stage
+#     session.sql("drop stage demo").collect()
+#
+#     #Move/Archive/rename file to other folder
+#     # os.rename(os.path.join(csv_file,file),os.path.join(archive_file,file))
