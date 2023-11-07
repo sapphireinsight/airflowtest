@@ -25,7 +25,7 @@ dag = DAG(
     # schedule_interval="@daily",
     # start_date=datetime(2021, 1, 1),
     # catchup=False,
-    schedule_interval='*/5 * * * *', dagrun_timeout=timedelta(seconds=5), start_date=datetime(2023, 1, 1), catchup=False,
+    schedule_interval='0 0 1 * *', dagrun_timeout=timedelta(seconds=5), start_date=datetime(2023, 1, 1), catchup=False,
     tags=['example'],
 )
 
