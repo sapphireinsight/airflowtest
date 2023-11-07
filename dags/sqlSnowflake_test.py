@@ -3,7 +3,7 @@ from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
 from hello_plugin.operators.simple_operator import simpleOperator
 
-SNOWFLAKE_CONN_ID = 'snowflake-test-conn'
+SNOWFLAKE_CONN_ID = 'simple-test-conn'
 SNOWFLAKE_SCHEMA = 'INSIGHTS'
 SNOWFLAKE_WAREHOUSE = 'B2B_INSIGHTS_COMPUTE_WH'
 SNOWFLAKE_DATABASE = 'B2B_111BBB999_DB'
