@@ -4,10 +4,10 @@ from datetime import datetime, timedelta
 from hello_plugin.operators.simple_operator import simpleOperator
 
 SNOWFLAKE_CONN_ID = 'simple-test-conn'
-SNOWFLAKE_SCHEMA = 'INSIGHTS'
-SNOWFLAKE_WAREHOUSE = 'B2B_INSIGHTS_COMPUTE_WH'
-SNOWFLAKE_DATABASE = 'B2B_111BBB999_DB'
-SNOWFLAKE_ROLE = 'B2B_INSIGHTS_111BBB999_WRITE_USER'
+# SNOWFLAKE_SCHEMA = 'INSIGHTS'
+# SNOWFLAKE_WAREHOUSE = 'B2B_INSIGHTS_COMPUTE_WH'
+# SNOWFLAKE_DATABASE = 'B2B_111BBB999_DB'
+# SNOWFLAKE_ROLE = 'B2B_INSIGHTS_111BBB999_WRITE_USER'
 
 
 MYSQL_CONNECTION_ID = 'mysql_297_mti_476'
@@ -23,7 +23,7 @@ dag = DAG(
     'sql_snowflake_test',
     default_args=default_args,
     # schedule_interval='*/5 * * * *', dagrun_timeout=timedelta(seconds=5), start_date=datetime(2023, 1, 1), catchup=False,
-    tags=['example'],
+    # tags=['example'],
 )
 
 sql_snowflake_op_with_params = simpleOperator(
