@@ -155,7 +155,7 @@ class simpleOperator(BaseOperator):
             "CREATE OR REPLACE TABLE "
             "activity_type_temp_2(id integer, name string)")
         snowflake_conn.cursor().execute(
-          "PUT {0} @%activity_type_temp_2".format(tmp_file.name))
+          "PUT file://{0} @%activity_type_temp_2".format(tmp_file.name))
         snowflake_conn.cursor().execute("COPY INTO activity_type_temp_2")
 
         self.log.info("Reading data from Snnowflake")
