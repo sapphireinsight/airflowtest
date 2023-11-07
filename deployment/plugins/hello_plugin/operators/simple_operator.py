@@ -156,7 +156,8 @@ class simpleOperator(BaseOperator):
             "activity_type_temp_2(id integer, name string)")
         snowflake_conn.cursor().execute(
           "PUT file://{0} @%activity_type_temp_2".format(tmp_file.name))
-        snowflake_conn.cursor().execute("COPY INTO activity_type_temp_2")
+        # snowflake_conn.cursor().execute("COPY INTO activity_type_temp_2")
+        snowflake_conn.cursor().execute("COPY INTO activity_type_temp_2(COLUMN1,COLUMN2) from (SELECT $2, $3 FROM @%activity_type_temp_2) file_format=(TYPE=CSV, SKIP_HEADER = 1)")
 
         self.log.info("Reading data from Snnowflake")
         for (id, name) in snowflake_conn.cursor().execute(
