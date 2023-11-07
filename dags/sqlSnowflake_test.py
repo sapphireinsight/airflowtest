@@ -11,7 +11,7 @@ SNOWFLAKE_ROLE = 'B2B_INSIGHTS_111BBB999_WRITE_USER'
 
 
 MYSQL_CONNECTION_ID = 'mysql_297_mti_476'
-MYSQL_QUERY = 'select id, name from activity_type;'
+MYSQL_QUERY = 'select name from activity_type;'
 MYSQL_DATABASE = 'ankurint1Betacust'
 
 
