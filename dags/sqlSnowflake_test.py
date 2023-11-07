@@ -22,6 +22,9 @@ default_args = {
 dag = DAG(
     'sql_snowflake_test',
     default_args=default_args,
+    schedule_interval="@yearly",
+    start_date=datetime(2021, 1, 1),
+    catchup=False,
     # schedule_interval='*/5 * * * *', dagrun_timeout=timedelta(seconds=5), start_date=datetime(2023, 1, 1), catchup=False,
     # tags=['example'],
 )
