@@ -7,37 +7,13 @@ from jnius import autoclass
 
 SNOWFLAKE_CONN_ID = 'simple-test-conn'
 
-
 MYSQL_CONNECTION_ID = 'mysql_297_mti_476'
-MYSQL_QUERY = 'select id, name from activity_type;'
 MYSQL_DATABASE = 'ankurint1Betacust'
 
 
 default_args = {
   'owner': 'airflow',
 }
-
-# dag = DAG(
-#     'sql_snowflake_test',
-#     default_args=default_args,
-#     # schedule_interval="@daily",
-#     # start_date=datetime(2021, 1, 1),
-#     # catchup=False,
-#     schedule_interval='*/5 * * * *', dagrun_timeout=timedelta(seconds=5), start_date=datetime(2023, 1, 1), catchup=False,
-#     tags=['example'],
-# )
-#
-# sql_snowflake_op_with_params = simpleOperator(
-#     task_id='sql_snowflake_op_with_params',
-#     dag=dag,
-#     snowflake_conn_id=SNOWFLAKE_CONN_ID,
-#     sql_conn_id=MYSQL_CONNECTION_ID,
-#     sql_query=MYSQL_QUERY,
-#     sql_database=MYSQL_DATABASE,
-# )
-#
-# sql_snowflake_op_with_params
-
 
 def run_some_java_codes():
   Stack = autoclass('java.util.Stack')
@@ -54,7 +30,7 @@ with DAG(
     # schedule_interval="@daily",
     # start_date=datetime(2021, 1, 1),
     # catchup=False,
-    schedule_interval='*/5 * * * *', dagrun_timeout=timedelta(seconds=5), start_date=datetime(2023, 1, 1), catchup=False,
+    schedule_interval='0 0 1 * *', dagrun_timeout=timedelta(seconds=5), start_date=datetime(2023, 1, 1), catchup=False,
     tags=['example'],
 ):
 
