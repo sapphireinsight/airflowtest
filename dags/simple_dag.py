@@ -25,5 +25,15 @@ with DAG(
       sql_table="smart_list_rule_temp_2",
       sql_table_columswithtype="id integer, target_type string, operator string, target_activity_type_id integer, conditions string",
   )
+  
+  sync_activity_type = simpleOperator(
+      task_id='write_activity_type',
+      snowflake_conn_id=SNOWFLAKE_CONN_ID,
+      sql_conn_id=MYSQL_CONNECTION_ID,
+      sql_query="SELECT id, name from activity_type;",
+      sql_database=MYSQL_DATABASE,
+      sql_table="activity_type_temp_2",
+      sql_table_columswithtype="id integer, name string",
+  )
 
-  sync_smart_list_rule
+  [sync_smart_list_rule,sync_activity_type]
