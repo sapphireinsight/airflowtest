@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from hello_plugin.operators.simple_operator import simpleOperator
 
 from airflow.operators.python_operator import PythonOperator
-from jnius import autoclass
+# from jnius import autoclass
 
 SNOWFLAKE_CONN_ID = 'simple-test-conn'
 
@@ -15,13 +15,14 @@ default_args = {
   'owner': 'airflow',
 }
 
-def run_some_java_codes():
-  Stack = autoclass('java.util.Stack')
-  stack = Stack()
-  stack.push('hello')
-  stack.push('world')
-  print(stack.pop()) # --> 'world'
-  print(stack.pop()) # --> 'hello'
+def run_some_java_codes_fake():
+  # Stack = autoclass('java.util.Stack')
+  # stack = Stack()
+  # stack.push('hello')
+  # stack.push('world')
+  # print(stack.pop()) # --> 'world'
+  # print(stack.pop()) # --> 'hello'
+  print("hello world")
 
 
 with DAG(
@@ -36,7 +37,7 @@ with DAG(
 
   test_run_java_code = PythonOperator(
       task_id="test_run_java_code",
-      python_callable=run_some_java_codes,
+      python_callable=run_some_java_codes_fake,
       op_kwargs={},
       provide_context=True,
   )
