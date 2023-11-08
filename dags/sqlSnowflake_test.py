@@ -35,12 +35,12 @@ with DAG(
     tags=['example'],
 ):
 
-  test_run_java_code = PythonOperator(
-      task_id="test_run_java_code",
-      python_callable=run_some_java_codes_fake,
-      op_kwargs={},
-      provide_context=True,
-  )
+  # test_run_java_code = PythonOperator(
+  #     task_id="test_run_java_code",
+  #     python_callable=run_some_java_codes_fake,
+  #     op_kwargs={},
+  #     provide_context=True,
+  # )
 
   sync_activity_type = simpleOperator(
       task_id='write_activity_type',
@@ -62,4 +62,5 @@ with DAG(
       sql_table_columswithtype="id integer, target_type string, operator string, target_activity_type_id integer, conditions string",
   )
 
-  test_run_java_code >> [sync_activity_type, sync_smart_list_rule]
+  # test_run_java_code >> [sync_activity_type, sync_smart_list_rule]
+  [sync_activity_type, sync_smart_list_rule]
