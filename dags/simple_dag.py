@@ -9,7 +9,7 @@ MYSQL_CONNECTION_ID = 'mysql_297_mti_476'
 MYSQL_DATABASE = 'ankurint1Betacust'
 
 with DAG(
-    dag_id="my_math_cat_dag",
+    dag_id="simple_dag",
     schedule_interval="@daily",
     start_date=datetime(2021, 1, 1),
     # render Jinja template as native Python object
