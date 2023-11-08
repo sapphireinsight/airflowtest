@@ -148,7 +148,11 @@ class simpleOperator(BaseOperator):
                             suffix=file_options.suffix) as tmp_file:
       self.log.info("Writing data to temp file")
       getattr(data_df, file_options.function)(tmp_file.name, index=False, **self.pd_kwargs)
-
+      # Open the file for reading.
+      self.log.info("reading tem: ")
+      with open(tmp.name) as f:
+        for line in f:
+          self.log.info(line)
       self.log.info("Uploading data to Snnowflake")
       snowflake_hook = self._get_snowflake_hook()
       self.log.info("print snowflake con params")
