@@ -138,7 +138,7 @@ class simpleOperator(BaseOperator):
   def execute(self, context: Context) -> None:
     hook = MySqlHook(mysql_conn_id=self.sql_conn_id, schema=self.sql_database)
     data_df = hook.get_pandas_df(sql=self.sql_query)
-    data_df = data_df.drop([first_column], axis=1)
+    data_df = data_df.drop([data_df.columns[0]], axis=1)
     self.log.info("Data from SQL obtained")
     self.log.info(data_df.to_string())
   
