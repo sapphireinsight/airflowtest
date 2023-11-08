@@ -17,6 +17,7 @@
 # under the License.
 from __future__ import annotations
 
+import csv
 import enum
 from collections import namedtuple
 from tempfile import NamedTemporaryFile
@@ -147,7 +148,7 @@ class simpleOperator(BaseOperator):
     with NamedTemporaryFile(mode=file_options.mode,
                             suffix=file_options.suffix) as tmp_file:
       self.log.info("Writing data to temp file")
-      getattr(data_df, file_options.function)(tmp_file.name, index=False, quoting=csv.QUOTE_NONE, **self.pd_kwargs)
+      getattr(data_df, file_options.function)(tmp_file.name, index=False, header=False, quoting=csv.QUOTE_NONE, **self.pd_kwargs)
       # Open the file for reading.
       self.log.info("reading tem: ")
       with open(tmp_file.name) as f:
