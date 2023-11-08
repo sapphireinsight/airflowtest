@@ -49,7 +49,7 @@ with DAG(
       sql_query="SELECT id, name from activity_type;",
       sql_database=MYSQL_DATABASE,
       sql_table="activity_type_temp_2",
-      sql_table_columswithtype="id integer, name string"
+      sql_table_columswithtype="id integer, name string",
   )
 
   sync_smart_list_rule = simpleOperator(
@@ -58,8 +58,8 @@ with DAG(
       sql_conn_id=MYSQL_CONNECTION_ID,
       sql_query="SELECT id, target_type, operator, target_activity_type_id, conditions from smart_list_rule;",
       sql_database=MYSQL_DATABASE,
-      sql_table="smart_list_rule",
-      sql_table_columswithtype="id integer, target_type string, operator string, target_activity_type_id integer, conditions string"
+      sql_table="smart_list_rule_temp_2",
+      sql_table_columswithtype="id integer, target_type string, operator string, target_activity_type_id integer, conditions string",
   )
 
   test_run_java_code >> [sync_activity_type, sync_smart_list_rule]
