@@ -147,7 +147,7 @@ class simpleOperator(BaseOperator):
     with NamedTemporaryFile(mode=file_options.mode,
                             suffix=file_options.suffix) as tmp_file:
       self.log.info("Writing data to temp file")
-      getattr(data_df, file_options.function)(tmp_file.name, **self.pd_kwargs)
+      getattr(data_df, file_options.function)(tmp_file.name, index=False, **self.pd_kwargs)
 
       self.log.info("Uploading data to Snnowflake")
       snowflake_hook = self._get_snowflake_hook()
@@ -159,8 +159,8 @@ class simpleOperator(BaseOperator):
           "{0}({1})".format(self.sql_table, self.sql_table_columswithtype))
       snowflake_conn.cursor().execute(
         "PUT file://{0} @%{1}".format(tmp_file.name, self.sql_table))
-      # snowflake_conn.cursor().execute("COPY INTO {0}".format(self.sql_table))
-      snowflake_conn.cursor().execute("COPY INTO {0}({1}) from (SELECT * exclude $1 FROM @%{0}) file_format=(TYPE=CSV, SKIP_HEADER = 1)".format(self.sql_table, self.sql_table_colums))
+      snowflake_conn.cursor().execute("COPY INTO {0}".format(self.sql_table))
+      # snowflake_conn.cursor().execute("COPY INTO {0}({1}) from (SELECT * exclude $1 FROM @%{0}) file_format=(TYPE=CSV, SKIP_HEADER = 1)".format(self.sql_table, self.sql_table_colums))
 
       self.log.info("Reading data from Snnowflake")
       for query_row in snowflake_conn.cursor().execute("SELECT * FROM {0}".format(self.sql_table)):
