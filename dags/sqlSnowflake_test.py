@@ -25,14 +25,22 @@ def run_some_java_codes_fake():
   print("hello world")
 
 
+# with DAG(
+#     'sql_snowflake_test',
+#     default_args=default_args,
+#     # schedule_interval="@daily",
+#     # start_date=datetime(2021, 1, 1),
+#     # catchup=False,
+#     schedule_interval='0 0 1 * *', dagrun_timeout=timedelta(seconds=5), start_date=datetime(2023, 1, 1), catchup=False,
+#     tags=['example'],
+# ):
 with DAG(
-    'sql_snowflake_test',
-    default_args=default_args,
-    # schedule_interval="@daily",
-    # start_date=datetime(2021, 1, 1),
-    # catchup=False,
-    schedule_interval='0 0 1 * *', dagrun_timeout=timedelta(seconds=5), start_date=datetime(2023, 1, 1), catchup=False,
-    tags=['example'],
+    dag_id="sql_snowflake_test",
+    schedule_interval="@daily",
+    start_date=datetime(2021, 1, 1),
+    # render Jinja template as native Python object
+    # render_template_as_native_obj=True,
+    catchup=False,
 ):
 
   # test_run_java_code = PythonOperator(
