@@ -1,7 +1,7 @@
 images:
   airflow:
     repository: zhaoqi0406/airflow
-    tag: 2.7.1.45
+    tag: 2.7.1.46
     pullPolicy: IfNotPresent
 
 securityContext:
