@@ -46,7 +46,7 @@ with DAG(
       task_id='write_activity_type',
       snowflake_conn_id=SNOWFLAKE_CONN_ID,
       sql_conn_id=MYSQL_CONNECTION_ID,
-      sql_query=MYSQL_QUERY,
+      sql_query="SELECT id, name from activity_type;",
       sql_database=MYSQL_DATABASE,
       sql_table="activity_type_temp_2",
       sql_table_columswithtype="id integer, name string"
@@ -56,7 +56,7 @@ with DAG(
       task_id='write_smart_list_rule',
       snowflake_conn_id=SNOWFLAKE_CONN_ID,
       sql_conn_id=MYSQL_CONNECTION_ID,
-      sql_query=MYSQL_QUERY,
+      sql_query="SELECT id, target_type, operator, target_activity_type_id, conditions from smart_list_rule;",
       sql_database=MYSQL_DATABASE,
       sql_table="smart_list_rule",
       sql_table_columswithtype="id integer, target_type string, operator string, target_activity_type_id integer, conditions string"
