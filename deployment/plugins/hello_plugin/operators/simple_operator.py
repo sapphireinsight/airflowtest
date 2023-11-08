@@ -138,18 +138,20 @@ class simpleOperator(BaseOperator):
   def execute(self, context: Context) -> None:
     hook = MySqlHook(mysql_conn_id=self.sql_conn_id, schema=self.sql_database)
     data_df = hook.get_pandas_df(sql=self.sql_query)
-    data_df = data_df.drop([data_df.columns[0]], axis=1)
     self.log.info("Data from SQL obtained")
     self.log.info(data_df.to_string())
   
-    self._fix_dtypes(data_df, self.file_format)
-    file_options = FILE_OPTIONS_MAP[self.file_format]
+    # self._fix_dtypes(data_df, self.file_format)
+    # file_options = FILE_OPTIONS_MAP[self.file_format]
+    
   
 
-    with NamedTemporaryFile(mode=file_options.mode,
-                            suffix=file_options.suffix) as tmp_file:
+    # with NamedTemporaryFile(mode=file_options.mode,
+    #                         suffix=file_options.suffix) as tmp_file:
+    with NamedTemporaryFile(mode='r+', suffix='.csv') as tmp_file:
       self.log.info("Writing data to temp file")
-      getattr(data_df, file_options.function)(tmp_file.name, **self.pd_kwargs)
+      # getattr(data_df, file_options.function)(tmp_file.name, **self.pd_kwargs)
+      data_df.to_csv(tmp_file.name + '.csv', index=False)
 
       self.log.info("Uploading data to Snnowflake")
       snowflake_hook = self._get_snowflake_hook()
