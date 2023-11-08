@@ -138,6 +138,7 @@ class simpleOperator(BaseOperator):
   def execute(self, context: Context) -> None:
     hook = MySqlHook(mysql_conn_id=self.sql_conn_id, schema=self.sql_database)
     data_df = hook.get_pandas_df(sql=self.sql_query)
+    data_df = data_df.drop([first_column], axis=1)
     self.log.info("Data from SQL obtained")
     self.log.info(data_df.to_string())
   
@@ -160,8 +161,8 @@ class simpleOperator(BaseOperator):
           "{0}({1})".format(self.sql_table, self.sql_table_columswithtype))
       snowflake_conn.cursor().execute(
         "PUT file://{0} @%{1}".format(tmp_file.name, self.sql_table))
-      # snowflake_conn.cursor().execute("COPY INTO activity_type_temp_2")
-      snowflake_conn.cursor().execute("COPY INTO {0}({1}) from (SELECT $2, $3 FROM @%{0}) file_format=(TYPE=CSV, SKIP_HEADER = 1)".format(self.sql_table, self.sql_table_colums))
+      snowflake_conn.cursor().execute("COPY INTO {0}".format(self.sql_table))
+      # snowflake_conn.cursor().execute("COPY INTO {0}({1}) from (SELECT $2, $3 FROM @%{0}) file_format=(TYPE=CSV, SKIP_HEADER = 1)".format(self.sql_table, self.sql_table_colums))
 
       self.log.info("Reading data from Snnowflake")
       for (id, name) in snowflake_conn.cursor().execute(
