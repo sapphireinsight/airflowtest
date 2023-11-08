@@ -167,9 +167,8 @@ class simpleOperator(BaseOperator):
       # snowflake_conn.cursor().execute("COPY INTO {0}({1}) from (SELECT $2, $3 FROM @%{0}) file_format=(TYPE=CSV, SKIP_HEADER = 1)".format(self.sql_table, self.sql_table_colums))
 
       self.log.info("Reading data from Snnowflake")
-      for (id, name) in snowflake_conn.cursor().execute(
-          "SELECT id, name FROM activity_type_temp_2"):
-        print('id:{0}, name: {1}'.format(id, name))
+      print(snowflake_conn.cursor().execute(
+          "SELECT * FROM {0}".format(self.sql_table)))
       self.log.info("close Snnowflake connection")
       snowflake_conn.close()
 
