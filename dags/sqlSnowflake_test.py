@@ -42,15 +42,15 @@ with DAG(
   #     provide_context=True,
   # )
 
-  sync_activity_type = simpleOperator(
-      task_id='write_activity_type',
-      snowflake_conn_id=SNOWFLAKE_CONN_ID,
-      sql_conn_id=MYSQL_CONNECTION_ID,
-      sql_query="SELECT id, name from activity_type;",
-      sql_database=MYSQL_DATABASE,
-      sql_table="activity_type_temp_2",
-      sql_table_columswithtype="id integer, name string",
-  )
+  # sync_activity_type = simpleOperator(
+  #     task_id='write_activity_type',
+  #     snowflake_conn_id=SNOWFLAKE_CONN_ID,
+  #     sql_conn_id=MYSQL_CONNECTION_ID,
+  #     sql_query="SELECT id, name from activity_type;",
+  #     sql_database=MYSQL_DATABASE,
+  #     sql_table="activity_type_temp_2",
+  #     sql_table_columswithtype="id integer, name string",
+  # )
 
   sync_smart_list_rule = simpleOperator(
       task_id='write_smart_list_rule',
@@ -63,4 +63,5 @@ with DAG(
   )
 
   # test_run_java_code >> [sync_activity_type, sync_smart_list_rule]
-  [sync_activity_type, sync_smart_list_rule]
+  # [sync_activity_type, sync_smart_list_rule]
+  sync_smart_list_rule
