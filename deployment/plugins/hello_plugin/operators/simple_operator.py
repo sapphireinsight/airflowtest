@@ -84,6 +84,8 @@ class simpleOperator(BaseOperator):
     self.sql_table_colums = self.get_table_columns_from_columnswithtypes()
     self.pd_kwargs = pd_kwargs or {}
 
+    self.pd_kwargs['index'] = False
+
     if "path_or_buf" in self.pd_kwargs:
       raise AirflowException(
         "The argument path_or_buf is not allowed, please remove it")
@@ -141,17 +143,17 @@ class simpleOperator(BaseOperator):
     self.log.info("Data from SQL obtained")
     self.log.info(data_df.to_string())
   
-    # self._fix_dtypes(data_df, self.file_format)
-    # file_options = FILE_OPTIONS_MAP[self.file_format]
+    self._fix_dtypes(data_df, self.file_format)
+    file_options = FILE_OPTIONS_MAP[self.file_format]
     
   
 
-    # with NamedTemporaryFile(mode=file_options.mode,
-    #                         suffix=file_options.suffix) as tmp_file:
-    with NamedTemporaryFile(mode='r+', suffix='.csv') as tmp_file:
+    with NamedTemporaryFile(mode=file_options.mode,
+                            suffix=file_options.suffix) as tmp_file:
+    # with NamedTemporaryFile(mode='r+', suffix='.csv') as tmp_file:
       self.log.info("Writing data to temp file")
-      # getattr(data_df, file_options.function)(tmp_file.name, **self.pd_kwargs)
-      data_df.to_csv(tmp_file.name + '.csv', index=False)
+      getattr(data_df, file_options.function)(tmp_file.name, **self.pd_kwargs)
+      # data_df.to_csv(tmp_file.name + '.csv', index=False)
 
       self.log.info("Uploading data to Snnowflake")
       snowflake_hook = self._get_snowflake_hook()
@@ -167,8 +169,8 @@ class simpleOperator(BaseOperator):
       # snowflake_conn.cursor().execute("COPY INTO {0}({1}) from (SELECT $2, $3 FROM @%{0}) file_format=(TYPE=CSV, SKIP_HEADER = 1)".format(self.sql_table, self.sql_table_colums))
 
       self.log.info("Reading data from Snnowflake")
-      print(snowflake_conn.cursor().execute(
-          "SELECT * FROM {0}".format(self.sql_table)))
+      for item in snowflake_conn.cursor().execute("SELECT id, name FROM activity_type_temp_2"):
+        print(item)
       self.log.info("close Snnowflake connection")
       snowflake_conn.close()
 
