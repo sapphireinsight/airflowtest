@@ -147,7 +147,7 @@ class simpleOperator(BaseOperator):
     with NamedTemporaryFile(mode=file_options.mode,
                             suffix=file_options.suffix) as tmp_file:
       self.log.info("Writing data to temp file")
-      getattr(data_df, file_options.function)(tmp_file.name, index=False, **self.pd_kwargs)
+      getattr(data_df, file_options.function)(tmp_file.name, index=False, quoting=csv.QUOTE_NONE, **self.pd_kwargs)
       # Open the file for reading.
       self.log.info("reading tem: ")
       with open(tmp_file.name) as f:
