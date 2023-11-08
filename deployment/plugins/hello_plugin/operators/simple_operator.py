@@ -64,6 +64,9 @@ class simpleOperator(BaseOperator):
       sql_query: str | None = None,
       sql_conn_id: str | None = None,
       sql_database: str | None = None,
+      sql_table: str | None = None,
+      sql_table_columswithtype: str | None = None,
+      sql_table_colums: str | None = None,
       file_format: Literal["csv", "json", "parquet"] = "csv",
       pd_kwargs: dict | None = None,
       **kwargs,
@@ -76,6 +79,9 @@ class simpleOperator(BaseOperator):
     self.sql_query = sql_query
     self.sql_conn_id = sql_conn_id
     self.sql_database = sql_database
+    self.sql_table = sql_table
+    self.sql_table_columswithtype = sql_table_columswithtype
+    self.sql_table_colums = self.get_table_columns_from_columnswithtypes()
     self.pd_kwargs = pd_kwargs or {}
 
     if "path_or_buf" in self.pd_kwargs:
@@ -138,45 +144,31 @@ class simpleOperator(BaseOperator):
     self._fix_dtypes(data_df, self.file_format)
     file_options = FILE_OPTIONS_MAP[self.file_format]
   
-    for group_name, df in self._partition_dataframe(df=data_df):
-      with NamedTemporaryFile(mode=file_options.mode,
-                              suffix=file_options.suffix) as tmp_file:
-        self.log.info("Writing data to temp file")
-        getattr(df, file_options.function)(tmp_file.name, **self.pd_kwargs)
-  
-        self.log.info("Uploading data to Snnowflake")
-        # self.load_data(tmp_file.name)
-        
-        snowflake_hook = self._get_snowflake_hook()
-        self.log.info("print snowflake con params")
-        self.log.info(snowflake_hook._get_conn_params())
-        snowflake_conn = snowflake_hook.get_conn()
-        snowflake_conn.cursor().execute(
-            "CREATE OR REPLACE TABLE "
-            "activity_type_temp_2(id integer, name string)")
-        snowflake_conn.cursor().execute(
-          "PUT file://{0} @%activity_type_temp_2".format(tmp_file.name))
-        # snowflake_conn.cursor().execute("COPY INTO activity_type_temp_2")
-        snowflake_conn.cursor().execute("COPY INTO activity_type_temp_2(id,name) from (SELECT $2, $3 FROM @%activity_type_temp_2) file_format=(TYPE=CSV, SKIP_HEADER = 1)")
 
-        self.log.info("Reading data from Snnowflake")
-        for (id, name) in snowflake_conn.cursor().execute(
-            "SELECT id, name FROM activity_type_temp_2"):
-          print('id:{0}, name: {1}'.format(id, name))
-        self.log.info("close Snnowflake connection")
-        snowflake_conn.close()
+    with NamedTemporaryFile(mode=file_options.mode,
+                            suffix=file_options.suffix) as tmp_file:
+      self.log.info("Writing data to temp file")
+      getattr(df, file_options.function)(tmp_file.name, **self.pd_kwargs)
 
+      self.log.info("Uploading data to Snnowflake")
+      snowflake_hook = self._get_snowflake_hook()
+      self.log.info("print snowflake con params")
+      self.log.info(snowflake_hook._get_conn_params())
+      snowflake_conn = snowflake_hook.get_conn()
+      snowflake_conn.cursor().execute(
+          "CREATE OR REPLACE TABLE "
+          "{0}({1})".format(self.sql_table, self.sql_table_columswithtype))
+      snowflake_conn.cursor().execute(
+        "PUT file://{0} @%{1}".format(tmp_file.name, self.sql_table))
+      # snowflake_conn.cursor().execute("COPY INTO activity_type_temp_2")
+      snowflake_conn.cursor().execute("COPY INTO {0}({1}) from (SELECT $2, $3 FROM @%{0}) file_format=(TYPE=CSV, SKIP_HEADER = 1)".format(self.sql_table, self.sql_table_colums))
 
-  def _partition_dataframe(self, df: pd.DataFrame) -> Iterable[
-    tuple[str, pd.DataFrame]]:
-    """Partition dataframe using pandas groupby() method."""
-    yield "", df
-    # if not self.groupby_kwargs:
-    #   yield "", df
-    # else:
-    #   grouped_df = df.groupby(**self.groupby_kwargs)
-    #   for group_label in grouped_df.groups:
-    #     yield group_label, grouped_df.get_group(group_label).reset_index(drop=True)
+      self.log.info("Reading data from Snnowflake")
+      for (id, name) in snowflake_conn.cursor().execute(
+          "SELECT id, name FROM activity_type_temp_2"):
+        print('id:{0}, name: {1}'.format(id, name))
+      self.log.info("close Snnowflake connection")
+      snowflake_conn.close()
 
 
   def _get_snowflake_hook(self) -> SnowflakeSqlApiHook:
@@ -187,44 +179,10 @@ class simpleOperator(BaseOperator):
     )
     return hook
 
-
-# from snowflake.snowpark.session import Session, FileOperation
-#
-#   # file="test.csv"
-#   # csv_file="\\\\Sharedpath\\share"
-#   # archive_file="\\\\Sharedpath\\archive"
-#
-#   # Create Session object
-#   def create_session_object(self):
-#     connection_parameters = {
-#       "account": "itqgdcp-targetaccount",
-#       "user": "BOBA",
-#       "password": "",
-#       # "private_key": "",
-#       "role": "ACCOUNTADMIN",
-#       "warehouse": "my_wh",
-#       "database": "PET_STORE",
-#       "schema": "CATSCHEMA"
-#     }
-#     session = Session.builder.configs(connection_parameters).create()
-#     return session
-#
-#   def load_data(self, filepathh):
-#     session = self.create_session_object()
-#     # Create internal stage if it does not exists
-#     session.sql("create or replace stage demo ").collect()
-#
-#     #Upload file to stage
-#     FileOperation(session).put(filepathh, '@demo/test.csv')
-#
-#     #create or replace snowflake table
-#     session.sql("create or replace table activity_type_temp_3(id integer, name string)").collect()
-#
-#     #load table from stage
-#     session.sql("copy into activity_type_temp_3 from @demo file_format= (type = csv field_delimiter=',' skip_header=1)").collect()
-#
-#     #drop stage
-#     session.sql("drop stage demo").collect()
-#
-#     #Move/Archive/rename file to other folder
-#     # os.rename(os.path.join(csv_file,file),os.path.join(archive_file,file))
+  def get_table_columns_from_columnswithtypes(self):
+    #id integer, name string  -> id, name
+    table_columns = []
+    columswithtypes_list = self.sql_table_columswithtype.split(',')
+    for item in columswithtypes_list:
+      table_columns.append(item.strip().split(' ')[0])
+    return ', '.join(table_columns)
