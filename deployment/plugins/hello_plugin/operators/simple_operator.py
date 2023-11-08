@@ -148,7 +148,7 @@ class simpleOperator(BaseOperator):
     with NamedTemporaryFile(mode=file_options.mode,
                             suffix=file_options.suffix) as tmp_file:
       self.log.info("Writing data to temp file")
-      getattr(df, file_options.function)(tmp_file.name, **self.pd_kwargs)
+      getattr(data_df, file_options.function)(tmp_file.name, **self.pd_kwargs)
 
       self.log.info("Uploading data to Snnowflake")
       snowflake_hook = self._get_snowflake_hook()
