@@ -20,7 +20,7 @@ with DAG(
       task_id='write_smart_list_rule',
       snowflake_conn_id=SNOWFLAKE_CONN_ID,
       sql_conn_id=MYSQL_CONNECTION_ID,
-      sql_query="SELECT id, target_type, operator, target_activity_type_id, conditions from smart_list_rule;",
+      sql_query="SELECT id, target_type, operator, target_activity_type_id, conditions from smart_list_rule where id = 3;",
       sql_database=MYSQL_DATABASE,
       sql_table="smart_list_rule_temp_2",
       sql_table_columswithtype="id integer, target_type string, operator string, target_activity_type_id integer, conditions string",
