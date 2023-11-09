@@ -164,7 +164,7 @@ class simpleOperator(BaseOperator):
           "{0}({1})".format(self.sql_table, self.sql_table_columswithtype))
       snowflake_conn.cursor().execute(
         "PUT file://{0} @%{1}".format(tmp_file.name, self.sql_table))
-      snowflake_conn.cursor().execute("COPY INTO {0} file_format=(TYPE=CSV, FIELD_OPTIONALLY_ENCLOSED_BY = '\"')".format(self.sql_table))
+      snowflake_conn.cursor().execute("COPY INTO {0} file_format=(TYPE=CSV,  ESCAPE = \"\\\", FIELD_OPTIONALLY_ENCLOSED_BY = \""\")".format(self.sql_table))
       # snowflake_conn.cursor().execute("COPY INTO {0}({1}) from (SELECT * exclude $1 FROM @%{0}) file_format=(TYPE=CSV, SKIP_HEADER = 1)".format(self.sql_table, self.sql_table_colums))
 
       self.log.info("Reading data from Snnowflake")
