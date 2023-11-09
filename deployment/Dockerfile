@@ -1,9 +1,16 @@
 FROM apache/airflow:2.7.1
 
+USER root
+
+RUN apt-get update \
+  && apt-get install -y default-jdk \
+  && apt-get clean
+
 COPY --chown=airflow:root plugins /opt/airflow/plugins
 
-COPY mongoConnectionTest-1.1-SNAPSHOT-shaded.jar /data/mongoConnectionTest-1.1-SNAPSHOT-shaded.jar
+COPY --chown=airflow:root jars /opt/airflow/jars
 
+USER airflow
 
 # Install OpenJDK-8
 #FROM ubuntu:18.04
