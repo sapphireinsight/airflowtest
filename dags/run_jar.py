@@ -13,6 +13,7 @@ with DAG(
 ):
   run_jar_task= BashOperator(
     task_id = 'runjar',
-    bash_command = 'java -cp /data/mongoConnectionTest-1.1-SNAPSHOT-shaded.jar Calculator'
+    # bash_command = 'java -cp /data/mongoConnectionTest-1.1-SNAPSHOT-shaded.jar Calculator'
+    bash_command = 'ls'
   )
   run_jar_task
