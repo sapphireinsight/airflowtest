@@ -13,7 +13,8 @@ with DAG(
 ):
   run_jar_task= BashOperator(
     task_id = 'runjar',
-    bash_command = 'java -cp /opt/airflow/jars/javaApp-1.0-SNAPSHOT.jar JavaApp'
+    bash_command = 'java -cp /opt/airflow/jars/test1015-1.0-SNAPSHOT.jar SnowStream'
+    # bash_command = 'java -cp /opt/airflow/jars/javaApp-1.0-SNAPSHOT.jar JavaApp'
     # bash_command = 'ls'
   )
   run_jar_task
