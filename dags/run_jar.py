@@ -13,7 +13,7 @@ with DAG(
 ):
   run_jar_task= BashOperator(
     task_id = 'runjar',
-    bash_command = 'java -cp /opt/airflow/jars/mongoConnectionTest-1.1-SNAPSHOT-shaded.jar Calculator'
+    bash_command = 'java -cp /opt/airflow/jars/javaApp-1.0-SNAPSHOT.jar JavaApp'
     # bash_command = 'ls'
   )
   run_jar_task
