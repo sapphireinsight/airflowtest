@@ -2,6 +2,10 @@ from pendulum import datetime
 from airflow import DAG
 from hello_plugin.operators.simple_operator import simpleOperator
 
+from airflow.operators.bash import BashOperator
+import os
+import sys
+
 
 SNOWFLAKE_CONN_ID = 'simple-test-conn'
 
@@ -36,4 +40,9 @@ with DAG(
       sql_table_columswithtype="id integer, name string",
   )
 
-  [sync_smart_list_rule,sync_activity_type]
+  snowflake_injest_sdk_activity_type = BashOperator(
+    task_id = 'runjar',
+    bash_command = 'java -cp /opt/airflow/jars/test1015-1.0-SNAPSHOT-shaded.jar SnowStream'
+  )
+
+  [sync_smart_list_rule,sync_activity_type] >> snowflake_injest_sdk_activity_type
